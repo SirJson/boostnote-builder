@@ -28,12 +28,12 @@ Because we are building something here you need dependencies. Because I didn't w
 * Node.js
 * NPM
 * Git
-* Grunt (Can be installed by the script)
+* grunt-cli (Can be installed by the script)
 
 I've tested it with [Node.js v8.12.0 LTS](https://nodejs.org/en/blog/release/v8.12.0/). It might work with the latest version as well but if you are in doubt choose the LTS version.
 
 ### What now?
 
-Just run install.sh. No sudo or root. You only need the sudo password later if you don't have Grunt and want the script to install it for you.
+Just run install.sh. No sudo or root. You only need the sudo password later if you don't have `grunt-cli` and want the script to install it for you.
 
 And that's it! I hope this script works for you.
