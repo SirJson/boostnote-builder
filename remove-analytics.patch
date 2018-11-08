@@ -320,29 +320,3 @@ index a6acc963..a4810ba0 100644
        this.setState({
          amaMessage: i18n.__('We hope we will gain your trust')
        })
-diff --git a/gruntfile.js b/gruntfile.js
-index ec3bbf79..0529e1c8 100644
---- a/gruntfile.js
-+++ b/gruntfile.js
-@@ -75,11 +75,7 @@ module.exports = function (grunt) {
- 
-   grunt.initConfig(initConfig)
-   grunt.loadNpmTasks('grunt-electron-installer')
--  if (!WIN) {
--    grunt.loadNpmTasks('grunt-electron-installer-debian')
--    grunt.loadNpmTasks('grunt-electron-installer-redhat')
--  }
--
-+  
-   grunt.registerTask('compile', function () {
-     var done = this.async()
-     var execPath = path.join('node_modules', '.bin', 'webpack') + ' --config webpack-production.config.js'
-@@ -265,7 +261,7 @@ module.exports = function (grunt) {
-         grunt.task.run(['compile', 'pack:osx', 'codesign', 'create-osx-installer', 'zip:osx'])
-         break
-       case 'linux':
--        grunt.task.run(['compile', 'pack:linux', 'electron-installer-debian', 'electron-installer-redhat'])
-+        grunt.task.run(['compile', 'pack:linux'])
-         break
-     }
-   })

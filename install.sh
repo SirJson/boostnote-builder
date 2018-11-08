@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-printf "\nBoostnote Builder for v0.11.10\n"
+printf "\nBoostnote Builder v2 for v0.11.10_git\n"
 printf "─────────────────────\n\n"
 printf "This script is based on the AUR files made by rokt33r (thank you!)\n\n"
 printf "I made the following process changes:\n"
@@ -31,7 +31,7 @@ read -p "Press any key to start..."
 
 BASE="$PWD"
 REPO="https://github.com/BoostIO/Boostnote.git"
-BUILD_FILES="$PWD/boostnote"
+BUILD_FILES="$PWD/boostnote.git"
 LOCAL_LIB="$HOME/.local/lib"
 LOCAL_BIN="$HOME/.local/bin"
 LOCAL_SHARE="$HOME/.local/share"
@@ -52,13 +52,13 @@ function install_grunt()
     echo "I couldn't find grunt-cli on your system. Do you want that I install it for you? Because it's npm you need to have sudo rights or be root."
     read -r -p "Continue? [y/N] " response
     case "$response" in
-        [yY][eE][sS]|[yY]) 
-            sudo npm install grunt
+        [yY][eE][sS]|[yY])
+            sudo npm install -g grunt-cli
             ;;
         *)
             panic "I can't build without grunt. Goodbye!"
             ;;
-    esac        
+    esac
 }
 
 
@@ -72,25 +72,24 @@ command -v "node" || panic "Failed to find Node.js on your system. Install Node.
 echo "Checking if npm is installed..."
 command -v "npm" || panic "Failed to find npm on your system. Install npm and try again!"
 
-echo "Checking if grunt is installed..."
+#echo "Checking if grunt is installed..."
 command -v "grunt" || install_grunt
 
 echo "Cloning repository..."
 git clone --branch master --single-branch "$REPO" "$BUILD_FILES"
-git checkout ff3026686ff7a8c8954d94527dbfb4538c9addcd # Version 1.10
-
-echo "Apply patch..."
 cd "$BUILD_FILES"
-patch -Np1 -i "${BASE}/remove-analytics_no-pkgs.patch"
+git checkout b8d1e37cce993340f23552aab0ff556669310d47 # Version 1.10 git
+echo "Apply patch..."
+patch -Np1 -i "${BASE}/remove-analytics.patch"
 
 echo "Install dependencies..."
 printf "> If you worry about the warnings please open a ticket here: https://github.com/BoostIO/Boostnote/issues\n\n"
-npm install --no-optional --no-shrinkwrap
+npm install --dev
 
 echo "Compile..."
 grunt compile
 
-echo "Pack..."
+echo "Build and package..."
 grunt pack:linux
 
 echo "Installing application for $USER..."
