@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-printf "\nBoostnote Builder v2 for v0.11.10_git\n"
+printf "\nBoostnote Builder v3 for master_git\n"
 printf "─────────────────────\n\n"
 printf "This script is based on the AUR files made by rokt33r (thank you!)\n\n"
 printf "I made the following process changes:\n"
@@ -40,6 +40,8 @@ ICONB_DIR="$LOCAL_SHARE/icons/hicolor/48x48"
 ICONC_DIR="$LOCAL_SHARE/icons/hicolor/16x16"
 APP_DIR="$LOCAL_SHARE/applications"
 ENTRY_EXEC_VAL="Exec=$HOME/.local/bin/boostnote %U"
+NODEPKG_CMD=""
+NODEPKG_TYPE=0
 
 function panic() # in the Disco
 {
@@ -47,13 +49,28 @@ function panic() # in the Disco
     exit 1
 }
 
+function select_node_pkgmgr()
+{
+    command -v "yarn" &> /dev/null
+    test $? -eq 0 && NODEPKG_CMD="yarn" && NODEPKG_TYPE=2 && echo "Using Yarn..." && exit 0
+    command -v "yarnpkg" &> /dev/null
+    test $? -eq 0 && NODEPKG_CMD="yarnpkg" && NODEPKG_TYPE=3 && echo "Using Yarn (old version)..." && exit 0
+    command -v "npm" &> /dev/null
+    test $? -eq 0 && NODEPKG_CMD="npm" && NODEPKG_TYPE=1 && echo "Using NPM..." && exit 0
+    exit 1
+}
+
 function install_grunt()
 {
-    echo "I couldn't find grunt-cli on your system. Do you want that I install it for you? Because it's npm you need to have sudo rights or be root."
+    echo "I couldn't find grunt-cli on your system. Do you want to install it? You might need to have sudo rights or be root."
     read -r -p "Continue? [y/N] " response
     case "$response" in
         [yY][eE][sS]|[yY])
-            sudo npm install -g grunt-cli
+            if [ $NODEPKG_TYPE -eq 0 ]; then
+                sudo $NODEPKG_CMD install -g grunt-cli
+            else
+                $NODEPKG_CMD global add grunt-cli
+            fi
             ;;
         *)
             panic "I can't build without grunt. Goodbye!"
@@ -69,22 +86,19 @@ fi
 echo "Checking if Node.js is installed..."
 command -v "node" || panic "Failed to find Node.js on your system. Install Node.js and try again!"
 
-echo "Checking if npm is installed..."
-command -v "npm" || panic "Failed to find npm on your system. Install npm and try again!"
+echo "Selecting a node package manager..."
+select_node_pkgmgr || panic "Failed to find npm, yarn or yarnpkg! Can't continue without a package manager."
 
-#echo "Checking if grunt is installed..."
+echo "Checking if grunt is installed..."
 command -v "grunt" || install_grunt
 
 echo "Cloning repository..."
 git clone --branch master --single-branch "$REPO" "$BUILD_FILES"
 cd "$BUILD_FILES"
-git checkout b8d1e37cce993340f23552aab0ff556669310d47 # Version 1.10 git
-echo "Apply patch..."
-patch -Np1 -i "${BASE}/remove-analytics.patch"
 
 echo "Install dependencies..."
 printf "> If you worry about the warnings please open a ticket here: https://github.com/BoostIO/Boostnote/issues\n\n"
-npm install --dev
+$NODEPKG_CMD install
 
 echo "Compile..."
 grunt compile
@@ -92,7 +106,12 @@ grunt compile
 echo "Build and package..."
 grunt pack:linux
 
-echo "Installing application for $USER..."
+if [ -d "$LOCAL_LIB/Boostnote-linux-x64" ]; then # More cleanup...
+    echo "Updating application for $USER..."
+    rm -rf "$LOCAL_LIB/Boostnote-linux-x64"
+else
+    echo "Installing application for $USER..."
+fi
 
 # Don't worry with the -p parameter we not only create the full tree we also ignore folders that already exist
 mkdir -p "$LOCAL_LIB"
@@ -109,11 +128,15 @@ ln -sf "$LOCAL_LIB/Boostnote-linux-x64/Boostnote" "$LOCAL_BIN/boostnote"
 echo "Creating start menu entry..."
 cd "$BASE"
 
+if [ -f "$BASE/boostnote.desktop" ]; then
+    rm -f "$BASE/boostnote.desktop"
+fi
+
 cp "$BASE/boostnote.desktop" "$APP_DIR"
 echo $ENTRY_EXEC_VAL >> "$APP_DIR/boostnote.desktop"
-cp "$BASE/icon128.png" "$ICONA_DIR/icon128.png"
-cp "$BASE/icon48.png" "$ICONB_DIR/icon48.png"
-cp "$BASE/icon16.png" "$ICONC_DIR/icon16.png"
+cp -u "$BASE/icon128.png" "$ICONA_DIR/icon128.png"
+cp -u "$BASE/icon48.png" "$ICONB_DIR/icon48.png"
+cp -u "$BASE/icon16.png" "$ICONC_DIR/icon16.png"
 
 echo "Updating desktop database..."
 update-desktop-database
