@@ -52,12 +52,12 @@ function panic() # in the Disco
 function select_node_pkgmgr()
 {
     command -v "yarn" &> /dev/null
-    test $? -eq 0 && NODEPKG_CMD="yarn" && NODEPKG_TYPE=2 && echo "Using Yarn..." && exit 0
+    test $? -eq 0 && NODEPKG_CMD="yarn" && NODEPKG_TYPE=2 && echo "Using Yarn..." && return 0
     command -v "yarnpkg" &> /dev/null
-    test $? -eq 0 && NODEPKG_CMD="yarnpkg" && NODEPKG_TYPE=3 && echo "Using Yarn (old version)..." && exit 0
+    test $? -eq 0 && NODEPKG_CMD="yarnpkg" && NODEPKG_TYPE=3 && echo "Using Yarn (old version)..." && return 0
     command -v "npm" &> /dev/null
-    test $? -eq 0 && NODEPKG_CMD="npm" && NODEPKG_TYPE=1 && echo "Using NPM..." && exit 0
-    exit 1
+    test $? -eq 0 && NODEPKG_CMD="npm" && NODEPKG_TYPE=1 && echo "Using NPM..." && return 0
+    return 1
 }
 
 function install_grunt()
